@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAS — Now Showing 🎬</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cinema-black:#0b0b10;
+    --cinema-black-2:#131218;
+    --velvet-red:#b3242e;
+    --marquee-gold:#e8b23d;
+    --ticket-cream:#f2e8d5;
+    --neon-teal:#35e0c4;
+    --ash:#9c97a6;
+    --font-display:'Anton', sans-serif;
+    --font-body:'Space Grotesk', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:var(--cinema-black);
+    color:var(--ticket-cream);
+    font-family:var(--font-body);
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+
+  a{color:inherit;}
+
+  img,svg{display:block;max-width:100%;}
+
+  button{font-family:inherit;cursor:pointer;border:none;}
+
+  button:focus-visible, [tabindex]:focus-visible{
+    outline:3px solid var(--neon-teal);
+    outline-offset:3px;
+  }
+
+  /* ---------- film grain overlay ---------- */
+  .grain{
+    position:fixed;inset:0;pointer-events:none;z-index:5;
+    opacity:.05;mix-blend-mode:overlay;
+  }
+
+  /* ---------- intro countdown ---------- */
+  .intro{
+    position:fixed;inset:0;z-index:100;
+    background:#000;
+    display:flex;align-items:center;justify-content:center;
+    transition:opacity .6s ease;
+  }
+  .intro__circle{
+    width:min(38vw,220px);height:min(38vw,220px);
+    border-radius:50%;
+    border:3px solid var(--ticket-cream);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .intro__circle::before{
+    content:"";position:absolute;inset:-3px;
+    border-radius:50%;
+    border:3px solid var(--marquee-gold);
+    clip-path:polygon(50% 50%, 50% 0%, 50% 0%);
+    animation:sweep 1s linear infinite;
+  }
+  @keyframes sweep{
+    0%{clip-path:polygon(50% 50%, 50% 0%, 50% 0%);}
+    100%{clip-path:polygon(50% 50%, 50% 0%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);}
+  }
+  .intro__num{
+    font-family:var(--font-display);
+    font-size:min(14vw,90px);
+    color:var(--ticket-cream);
+    letter-spacing:2px;
+  }
+  .intro__skip{
+    position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+    background:transparent;color:var(--ash);
+    font-family:var(--font-mono);font-size:.8rem;
+    border:1px solid var(--ash);border-radius:999px;
+    padding:8px 18px;opacity:0;
+    transition:opacity .4s ease, color .2s ease, border-color .2s ease;
+  }
+  .intro__skip.show{opacity:1;}
+  .intro__skip:hover{color:var(--ticket-cream);border-color:var(--ticket-cream);}
+
+  .curtain{
+    position:fixed;top:0;bottom:0;width:52%;
+    background:linear-gradient(180deg, var(--velvet-red), #6e1319);
+    z-index:99;
+    box-shadow:0 0 60px rgba(0,0,0,.6) inset;
+    transition:transform 1s cubic-bezier(.65,0,.35,1);
+  }
+  .curtain--l{left:0;}
+  .curtain--r{right:0;}
+  .curtain.open.curtain--l{transform:translateX(-105%);}
+  .curtain.open.curtain--r{transform:translateX(105%);}
+
+  body.locked{overflow:hidden;height:100vh;}
+
+  /* ---------- marquee ---------- */
+  .marquee{
+    position:sticky;top:0;z-index:20;
+    background:var(--velvet-red);
+    border-bottom:2px dashed var(--marquee-gold);
+    overflow:hidden;
+    white-space:nowrap;
+    padding:8px 0;
+  }
+  .marquee__track{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:.75rem;
+    letter-spacing:.12em;
+    color:var(--ticket-cream);
+    animation:scroll-left 22s linear infinite;
+  }
+  .marquee__track span{padding:0 1.5rem;}
+  @keyframes scroll-left{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:92vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:80px 20px 60px;
+    position:relative;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(232,178,61,.16), transparent 60%),
+      var(--cinema-black);
+  }
+  .hero__eyebrow{
+    font-family:var(--font-mono);
+    color:var(--neon-teal);
+    font-size:.8rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .hero__title{
+    font-family:var(--font-display);
+    font-size:clamp(4rem,17vw,10rem);
+    line-height:.9;
+    color:var(--ticket-cream);
+    text-shadow:0 0 40px rgba(232,178,61,.35);
+    letter-spacing:2px;
+  }
+  .hero__working{
+    font-family:var(--font-mono);
+    color:var(--ash);
+    font-size:.85rem;
+    margin-top:10px;
+    letter-spacing:.1em;
+  }
+  .hero__tagline{
+    max-width:520px;
+    margin:26px auto 0;
+    font-size:1.05rem;
+    color:var(--ticket-cream);
+    opacity:.85;
+  }
+  .hero__scroll{
+    margin-top:56px;
+    font-family:var(--font-mono);
+    font-size:.8rem;
+    color:var(--ash);
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+  }
+  .hero__scroll-icon{
+    width:20px;height:32px;
+    border:2px solid var(--ash);
+    border-radius:12px;
+    position:relative;
+  }
+  .hero__scroll-icon::before{
+    content:"";position:absolute;top:6px;left:50%;
+    width:4px;height:4px;border-radius:50%;
+    background:var(--marquee-gold);
+    transform:translateX(-50%);
+    animation:scroll-dot 1.6s ease infinite;
+  }
+  @keyframes scroll-dot{
+    0%{opacity:1;top:6px;}
+    70%{opacity:0;top:18px;}
+    100%{opacity:0;top:6px;}
+  }
+
+  /* ---------- shared section wrapper ---------- */
+  .sect{
+    max-width:900px;
+    margin:0 auto;
+    padding:90px 24px;
+  }
+  .sect__label{
+    font-family:var(--font-mono);
+    color:var(--neon-teal);
+    font-size:.75rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .sect__heading{
+    font-family:var(--font-display);
+    font-size:clamp(1.8rem,5vw,2.6rem);
+    color:var(--ticket-cream);
+    margin-bottom:34px;
+  }
+  .reveal{
+    opacity:0;transform:translateY(24px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  /* ---------- review card ---------- */
+  .review{
+    background:var(--ticket-cream);
+    color:var(--cinema-black);
+    border-radius:18px;
+    padding:36px;
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:26px;
+    box-shadow:0 20px 50px rgba(0,0,0,.4);
+  }
+  .review__poster{
+    width:120px;height:170px;border-radius:10px;
+    background:linear-gradient(160deg, var(--velvet-red), var(--marquee-gold));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);
+    font-size:2.4rem;color:var(--ticket-cream);
+  }
+  .review__top{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    flex-wrap:wrap;gap:10px;
+    font-family:var(--font-mono);font-size:.8rem;color:#5b5648;
+  }
+  .review__stars{
+    font-size:1.3rem;color:var(--velvet-red);
+    letter-spacing:2px;
+  }
+  .review__pills{
+    margin:14px 0 16px;
+    display:flex;flex-wrap:wrap;gap:8px;
+  }
+  .review__pill{
+    font-family:var(--font-mono);
+    font-size:.72rem;
+    border:1px solid var(--cinema-black);
+    border-radius:999px;
+    padding:5px 12px;
+  }
+  .review__synopsis{
+    font-size:.98rem;
+    line-height:1.65;
+  }
+
+  /* ---------- cast ---------- */
+  .cast{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  .cast__card{
+    background:var(--cinema-black-2);
+    border:1px solid #262530;
+    border-radius:14px;
+    padding:26px;
+  }
+  .cast__name{
+    font-family:var(--font-display);
+    font-size:1.6rem;
+    color:var(--marquee-gold);
+    letter-spacing:1px;
+  }
+  .cast__role{
+    margin-top:8px;
+    font-size:.92rem;
+    color:var(--ash);
+  }
+
+  /* ---------- scenes filmstrip ---------- */
+  .strip{
+    position:relative;
+    padding:22px 0;
+    border-top:3px dashed #35333f;
+    border-bottom:3px dashed #35333f;
+  }
+  .strip::before,.strip::after{
+    content:"";
+    position:absolute;left:0;right:0;height:14px;
+    background-image:radial-gradient(circle, var(--cinema-black) 4px, transparent 4.5px);
+    background-size:28px 14px;
+    background-repeat:repeat-x;
+  }
+  .strip::before{top:-8px;}
+  .strip::after{bottom:-8px;}
+  .strip__grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:16px;
+  }
+  .scene{
+    background:var(--cinema-black-2);
+    border-radius:10px;
+    padding:20px;
+    border:1px solid #262530;
+  }
+  .scene__num{
+    font-family:var(--font-mono);
+    color:var(--neon-teal);
+    font-size:.75rem;
+    letter-spacing:.1em;
+  }
+  .scene__title{
+    font-family:var(--font-display);
+    font-size:1.1rem;
+    color:var(--ticket-cream);
+    margin:8px 0 8px;
+  }
+  .scene__desc{
+    font-size:.88rem;
+    color:var(--ash);
+    line-height:1.55;
+  }
+
+  /* ---------- seat map ---------- */
+  .seatmap{
+    text-align:center;
+  }
+  .seatmap__screen{
+    margin:0 auto 40px;
+    width:80%;
+    max-width:460px;
+    height:10px;
+    background:linear-gradient(90deg, transparent, var(--marquee-gold), transparent);
+    border-radius:50%;
+    filter:blur(1px);
+  }
+  .seatmap__screen-label{
+    font-family:var(--font-mono);
+    font-size:.7rem;
+    color:var(--ash);
+    letter-spacing:.3em;
+    margin-bottom:6px;
+  }
+  .seatmap__grid{
+    display:inline-grid;
+    grid-template-columns:repeat(8, minmax(26px,34px));
+    gap:8px;
+    margin:0 auto;
+  }
+  .seat{
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:6px 6px 3px 3px;
+    background:#26242e;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);
+    font-size:.65rem;
+    color:#514f5c;
+    cursor:not-allowed;
+  }
+  .seat--faris{
+    background:var(--neon-teal);
+    color:var(--cinema-black);
+    cursor:default;
+    font-weight:600;
+  }
+  .seat--reserved{
+    background:var(--marquee-gold);
+    color:var(--cinema-black);
+    cursor:pointer;
+    animation:pulse-seat 1.8s ease-in-out infinite;
+    font-weight:700;
+  }
+  @keyframes pulse-seat{
+    0%,100%{box-shadow:0 0 0 0 rgba(232,178,61,.55);}
+    50%{box-shadow:0 0 0 8px rgba(232,178,61,0);}
+  }
+  .seatmap__legend{
+    margin-top:26px;
+    display:flex;justify-content:center;gap:20px;flex-wrap:wrap;
+    font-family:var(--font-mono);
+    font-size:.72rem;
+    color:var(--ash);
+  }
+  .legend__dot{
+    display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle;
+  }
+
+  /* ---------- final ticket ---------- */
+  .ticket-wrap{
+    max-width:560px;
+    margin:0 auto;
+  }
+  .ticket{
+    position:relative;
+    background:var(--ticket-cream);
+    color:var(--cinema-black);
+    border-radius:16px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+  }
+  .ticket__main{padding:30px;}
+  .ticket__stub{
+    width:110px;
+    background:repeating-linear-gradient(180deg, var(--velvet-red) 0 10px, #94191f 10px 20px);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .ticket__stub-text{
+    writing-mode:vertical-rl;
+    font-family:var(--font-mono);
+    letter-spacing:.2em;
+    font-size:.72rem;
+    color:var(--ticket-cream);
+  }
+  .ticket__perf{
+    position:absolute;top:0;bottom:0;left:0;
+    width:2px;
+    background-image:radial-gradient(circle, var(--cinema-black) 3px, transparent 3.2px);
+    background-size:8px 16px;
+    background-repeat:repeat-y;
+  }
+  .ticket__title{
+    font-family:var(--font-display);
+    font-size:1.6rem;
+    letter-spacing:1px;
+  }
+  .ticket__sub{
+    font-family:var(--font-mono);
+    font-size:.72rem;
+    color:#5b5648;
+    margin-top:4px;
+  }
+  .ticket__grid{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    font-family:var(--font-mono);
+    font-size:.74rem;
+  }
+  .ticket__grid dt{color:#7a7460;text-transform:uppercase;letter-spacing:.08em;font-size:.66rem;}
+  .ticket__grid dd{margin-top:3px;}
+  .ticket__question{
+    margin-top:22px;
+    font-size:1rem;
+    font-weight:600;
+  }
+
+  .cta-row{
+    margin-top:20px;
+  }
+  .btn{
+    border-radius:999px;
+    padding:14px 22px;
+    font-size:.9rem;
+    font-weight:600;
+  }
+  .btn--yes{
+    background:var(--velvet-red);
+    color:var(--ticket-cream);
+  }
+  .btn--yes:hover{background:#92161f;}
+  .dodge-zone{
+    position:relative;
+    width:100%;
+    height:96px;
+    margin-top:14px;
+  }
+  .btn--no{
+    background:transparent;
+    border:1px solid #b8b19a;
+    color:#5b5648;
+    position:absolute;
+    left:0;
+    top:0;
+    white-space:nowrap;
+  }
+
+  .stamp{
+    position:absolute;
+    top:18px;right:18px;
+    font-family:var(--font-display);
+    font-size:1.4rem;
+    color:var(--velvet-red);
+    border:4px solid var(--velvet-red);
+    border-radius:8px;
+    padding:4px 10px;
+    transform:rotate(-14deg) scale(0);
+    opacity:0;
+    transition:transform .5s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+    pointer-events:none;
+  }
+  .stamp.show{transform:rotate(-14deg) scale(1);opacity:1;}
+
+  .after-yes{
+    margin-top:18px;
+    font-size:.92rem;
+    display:none;
+  }
+  .after-yes.show{display:block;}
+
+  .confetti{
+    position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden;
+  }
+  .confetti span{
+    position:absolute;top:-20px;
+    width:8px;height:14px;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{transform:translateY(110vh) rotate(540deg);opacity:.9;}
+  }
+
+  /* ---------- credits ---------- */
+  .credits{
+    background:#000;
+    padding:70px 24px;
+    text-align:center;
+    overflow:hidden;
+  }
+  .credits__inner{
+    max-width:480px;margin:0 auto;
+    font-family:var(--font-mono);
+    font-size:.85rem;
+    color:var(--ash);
+  }
+  .credits__row{margin-bottom:26px;}
+  .credits__role{
+    color:var(--marquee-gold);
+    letter-spacing:.14em;
+    font-size:.7rem;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .credits__name{
+    font-family:var(--font-display);
+    color:var(--ticket-cream);
+    font-size:1.3rem;
+    letter-spacing:1px;
+  }
+  .credits__end{
+    margin-top:40px;
+    font-family:var(--font-display);
+    font-size:1.8rem;
+    color:var(--ticket-cream);
+    letter-spacing:2px;
+  }
+  .credits__footer{
+    margin-top:24px;
+    font-size:.72rem;
+    color:#514f5c;
+  }
+
+  @media (max-width:600px){
+    .review{grid-template-columns:1fr;text-align:left;}
+    .review__poster{width:90px;height:128px;}
+    .cast{grid-template-columns:1fr;}
+    .ticket{grid-template-columns:1fr;}
+    .ticket__stub{width:100%;height:36px;flex-direction:row;}
+    .ticket__stub-text{writing-mode:horizontal-tb;}
+    .ticket__perf{top:0;left:0;right:0;bottom:auto;width:auto;height:2px;background-image:radial-gradient(circle, var(--cinema-black) 3px, transparent 3.2px);background-size:16px 8px;background-repeat:repeat-x;}
+    .seatmap__grid{grid-template-columns:repeat(8, minmax(20px,26px));gap:5px;}
+    .btn--no{font-size:.8rem;padding:12px 16px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body class="locked">
+
+<svg class="grain" xmlns="http://www.w3.org/2000/svg">
+  <filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/></filter>
+  <rect width="100%" height="100%" filter="url(#n)"/>
+</svg>
+
+<!-- ============ INTRO COUNTDOWN ============ -->
+<div class="curtain curtain--l" id="curtainL"></div>
+<div class="curtain curtain--r" id="curtainR"></div>
+<div class="intro" id="intro">
+  <div class="intro__circle">
+    <span class="intro__num" id="countNum">3</span>
+  </div>
+  <button class="intro__skip" id="skipBtn">lewati intro →</button>
+</div>
+
+<!-- ============ MARQUEE ============ -->
+<div class="marquee">
+  <div class="marquee__track">
+    <span>🎬 NOW SHOWING</span>
+    <span>★ CINEPLEX HATI</span>
+    <span>★ RATED SU — SEMUA UMUR (KHUSUS BUAT IAS)</span>
+    <span>★ FILMNYA CUMA TAYANG SEKALI, JANGAN TELAT</span>
+    <span>🎬 NOW SHOWING</span>
+    <span>★ CINEPLEX HATI</span>
+    <span>★ RATED SU — SEMUA UMUR (KHUSUS BUAT IAS)</span>
+    <span>★ FILMNYA CUMA TAYANG SEKALI, JANGAN TELAT</span>
+  </div>
+</div>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero__eyebrow">Sebuah film yang belum punya judul resmi</div>
+  <h1 class="hero__title">IAS</h1>
+  <div class="hero__working">(working title)</div>
+  <p class="hero__tagline">Genre: Romance, Comedy, dan sedikit Plot Twist. Disutradarai oleh Faris, dibintangi oleh kalian berdua.</p>
+  <div class="hero__scroll">
+    <div class="hero__scroll-icon"></div>
+    scroll buat baca reviewnya
+  </div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="sect reveal" id="s1">
+  <div class="sect__label">Diary Entry</div>
+  <h2 class="sect__heading">Ditonton oleh Faris</h2>
+  <div class="review">
+    <div class="review__poster">IAS</div>
+    <div>
+      <div class="review__top">
+        <span>Ditonton berkali-kali di kepala</span>
+        <span class="review__stars">★★★★★</span>
+      </div>
+      <div class="review__pills">
+        <span class="review__pill">Romance</span>
+        <span class="review__pill">Comedy</span>
+        <span class="review__pill">Coming-of-Age</span>
+        <span class="review__pill">Slice of Life</span>
+      </div>
+      <p class="review__synopsis">
+        Ceritanya simpel tapi susah move on: ada satu orang yang bikin hari-hari biasa berasa punya plot.
+        Belum ada judul resmi, belum ada tanggal rilis pasti — tapi adegan yang sama udah ditonton berkali-kali
+        di kepala gue sendiri. Sekarang tinggal nunggu lampu bioskop nyala dan lihat responnya.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CAST ============ -->
+<section class="sect reveal" id="s2">
+  <div class="sect__label">Cast &amp; Crew</div>
+  <h2 class="sect__heading">Siapa aja yang main</h2>
+  <div class="cast">
+    <div class="cast__card">
+      <div class="cast__name">IAS</div>
+      <div class="cast__role">Pemeran utama wanita — alasan gue jadi rajin buka HP</div>
+    </div>
+    <div class="cast__card">
+      <div class="cast__name">FARIS</div>
+      <div class="cast__role">Sutradara merangkap pemeran pendukung yang pengen naik jabatan</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCENES ============ -->
+<section class="sect reveal" id="s3">
+  <div class="sect__label">Behind the Scenes</div>
+  <h2 class="sect__heading">Beberapa adegan sejauh ini</h2>
+  <div class="strip">
+    <div class="strip__grid">
+      <div class="scene">
+        <div class="scene__num">SCENE 01</div>
+        <div class="scene__title">Opening Scene</div>
+        <div class="scene__desc">Awalnya cuma say hi biasa. Nggak nyangka bakal jadi awal dari overthinking session paling worth it sepanjang tahun.</div>
+      </div>
+      <div class="scene">
+        <div class="scene__num">SCENE 02</div>
+        <div class="scene__title">Rising Action</div>
+        <div class="scene__desc">Chat yang tadinya bales seperlunya, pelan-pelan jadi panjang sampe lupa udah jam berapa. Red flag pertama: mulai kepikiran mulu.</div>
+      </div>
+      <div class="scene">
+        <div class="scene__num">SCENE 03</div>
+        <div class="scene__title">Character Development</div>
+        <div class="scene__desc">Dari yang cuma "baik-baik aja" jadi deg-degan tiap notif bunyi. Character development paling nggak direncanain, tapi paling seru dijalanin.</div>
+      </div>
+      <div class="scene">
+        <div class="scene__num">SCENE 04</div>
+        <div class="scene__title">Cliffhanger</div>
+        <div class="scene__desc">Sekarang. Filmnya nge-freeze di sini, nunggu keputusan dari pemeran utama wanita.</div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Catatan: 3 scene pertama masih pakai kata-kata generik, bebas diganti pakai momen asli kalian berdua kalau mau lebih personal (cari class .scene__desc) -->
+
+<!-- ============ SEAT MAP ============ -->
+<section class="sect seatmap reveal" id="s4">
+  <div class="sect__label">Pilih Kursi</div>
+  <h2 class="sect__heading">Studionya udah penuh...</h2>
+  <div class="seatmap__screen-label">L A Y A R</div>
+  <div class="seatmap__screen"></div>
+  <div class="seatmap__grid" id="seatGrid"></div>
+  <div class="seatmap__legend">
+    <div><span class="legend__dot" style="background:#26242e"></span>Terisi orang lain</div>
+    <div><span class="legend__dot" style="background:var(--neon-teal)"></span>Faris</div>
+    <div><span class="legend__dot" style="background:var(--marquee-gold)"></span>Disimpan buat Ias</div>
+  </div>
+</section>
+
+<!-- ============ FINAL TICKET ============ -->
+<section class="sect reveal" id="s5">
+  <div class="sect__label">Box Office</div>
+  <h2 class="sect__heading">Tiketnya udah dicetak</h2>
+  <div class="ticket-wrap">
+    <div class="ticket">
+      <div class="ticket__main">
+        <div class="ticket__title">FARIS × IAS</div>
+        <div class="ticket__sub">SEASON 2 — PREMIERE</div>
+        <dl class="ticket__grid">
+          <div><dt>Studio</dt><dd>Hati Faris</dd></div>
+          <div><dt>Kursi</dt><dd>Reserved</dd></div>
+          <div><dt>Jam tayang</dt><dd>Kapan aja, yang penting bareng kamu</dd></div>
+          <div><dt>Rating</dt><dd>SU (buat Ias doang)</dd></div>
+        </dl>
+        <p class="ticket__question">Mau lanjut nonton season berikutnya bareng aku?</p>
+        <div class="cta-row" id="ctaRow">
+          <button class="btn btn--yes" id="yesBtn">GAS, AMBIL TIKETNYA 🎟️</button>
+        </div>
+        <div class="dodge-zone" id="dodgeZone">
+          <button class="btn btn--no" id="noBtn">Nanti dulu, masih mikir</button>
+        </div>
+        <p class="after-yes" id="afterYes">Tiket udah dicetak atas nama kalian berdua. Sampai ketemu di premiere-nya ✨</p>
+      </div>
+      <div class="ticket__stub">
+        <div class="ticket__perf"></div>
+        <span class="ticket__stub-text">ADM ★ ONE</span>
+      </div>
+      <div class="stamp" id="stamp">SOLD OUT</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CREDITS ============ -->
+<section class="credits" id="credits">
+  <div class="credits__inner">
+    <div class="credits__row">
+      <div class="credits__role">Ditulis &amp; disutradarai oleh</div>
+      <div class="credits__name">Faris</div>
+    </div>
+    <div class="credits__row">
+      <div class="credits__role">Dibintangi oleh</div>
+      <div class="credits__name">Ias</div>
+    </div>
+    <div class="credits__row">
+      <div class="credits__role">Diproduksi karena</div>
+      <div class="credits__name">satu orang yang bikin susah move on</div>
+    </div>
+    <div class="credits__row">
+      <div class="credits__role">Special thanks</div>
+      <div class="credits__name">kamu yang udah scroll sampai sini</div>
+    </div>
+    <div class="credits__end">TO BE CONTINUED...</div>
+    <div class="credits__footer">dibuat khusus buat Ias, dengan kode &amp; sedikit modal nekat.</div>
+  </div>
+</section>
+
+<div class="confetti" id="confetti"></div>
+
+<script>
+// ---------- intro countdown ----------
+(function(){
+  const nums = [3,2,1];
+  let i = 0;
+  const numEl = document.getElementById('countNum');
+  const intro = document.getElementById('intro');
+  const curtainL = document.getElementById('curtainL');
+  const curtainR = document.getElementById('curtainR');
+  const skipBtn = document.getElementById('skipBtn');
+
+  function openCurtains(){
+    curtainL.classList.add('open');
+    curtainR.classList.add('open');
+    intro.style.opacity = '0';
+    setTimeout(()=>{
+      intro.style.display='none';
+      curtainL.style.display='none';
+      curtainR.style.display='none';
+      document.body.classList.remove('locked');
+    }, 1000);
+  }
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced){
+    openCurtains();
+  } else {
+    numEl.textContent = nums[0];
+    const timer = setInterval(()=>{
+      i++;
+      if(i < nums.length){
+        numEl.textContent = nums[i];
+      } else {
+        clearInterval(timer);
+        openCurtains();
+      }
+    }, 750);
+    setTimeout(()=>skipBtn.classList.add('show'), 800);
+    skipBtn.addEventListener('click', ()=>{
+      clearInterval(timer);
+      openCurtains();
+    });
+  }
+})();
+
+// ---------- scroll reveal ----------
+(function(){
+  const items = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('in'); }
+    });
+  },{threshold:.15});
+  items.forEach(el=>io.observe(el));
+})();
+
+// ---------- seat map ----------
+(function(){
+  const grid = document.getElementById('seatGrid');
+  const rows = ['A','B','C','D'];
+  const seatsPerRow = 8;
+  const farisSeat = 'B4';
+  const reservedSeat = 'B5';
+
+  rows.forEach(row=>{
+    for(let n=1;n<=seatsPerRow;n++){
+      const id = row+n;
+      const seat = document.createElement('div');
+      seat.className = 'seat';
+      seat.textContent = id;
+      seat.setAttribute('role','img');
+
+      if(id === farisSeat){
+        seat.classList.add('seat--faris');
+        seat.textContent = 'F';
+        seat.setAttribute('aria-label','Kursi Faris');
+      } else if(id === reservedSeat){
+        seat.classList.add('seat--reserved');
+        seat.textContent = '?';
+        seat.tabIndex = 0;
+        seat.setAttribute('role','button');
+        seat.setAttribute('aria-label','Kursi disimpan buat Ias, klik buat lanjut');
+        seat.addEventListener('click', scrollToTicket);
+        seat.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); scrollToTicket(); } });
+      } else {
+        seat.setAttribute('aria-label','Kursi sudah terisi');
+      }
+      grid.appendChild(seat);
+    }
+  });
+
+  function scrollToTicket(){
+    document.getElementById('s5').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+})();
+
+// ---------- dodging "no" button ----------
+(function(){
+  const noBtn = document.getElementById('noBtn');
+  const zone = document.getElementById('dodgeZone');
+  const captions = [
+    'Nanti dulu, masih mikir',
+    'Eh, kok gini',
+    'Coba lagi deh',
+    'Yakin nih?',
+    'Susah amat sih',
+    'Oke, oke, tetep di sini'
+  ];
+  let dodges = 0;
+  const maxDodges = 5;
+  const threshold = 70;   // px — jarak kursor yang memicu kabur
+  const cooldown = 220;   // ms — jeda minimum antar-kaburan
+  let lastDodge = 0;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function bounds(){
+    const zr = zone.getBoundingClientRect();
+    return {
+      zr,
+      maxX: Math.max(zr.width - noBtn.offsetWidth, 0),
+      maxY: Math.max(zr.height - noBtn.offsetHeight, 0)
+    };
+  }
+
+  function place(x, y){
+    const b = bounds();
+    noBtn.style.left = Math.min(Math.max(x, 0), b.maxX) + 'px';
+    noBtn.style.top = Math.min(Math.max(y, 0), b.maxY) + 'px';
+  }
+
+  // posisi awal: kiri, center vertikal
+  const start = bounds();
+  place(0, start.maxY / 2);
+
+  function fleeFrom(clientX, clientY){
+    if(reduced || dodges >= maxDodges) return;
+    const now = performance.now();
+    if(now - lastDodge < cooldown) return;
+    lastDodge = now;
+    dodges++;
+    noBtn.textContent = captions[Math.min(dodges, captions.length - 1)];
+
+    const b = bounds();
+    const cursorX = clientX - b.zr.left;
+    const cursorY = clientY - b.zr.top;
+
+    // cari titik dalam arena yang paling jauh dari kursor —
+    // ini yang bikin arah kaburnya selalu masuk akal (menjauh), bukan lompat acak
+    let best = { x: 0, y: 0, d: -1 };
+    const cols = 5, rows = 3;
+    for (let i = 0; i <= cols; i++) {
+      for (let j = 0; j <= rows; j++) {
+        const cx = (b.maxX * i) / cols;
+        const cy = (b.maxY * j) / rows;
+        const centerX = cx + noBtn.offsetWidth / 2;
+        const centerY = cy + noBtn.offsetHeight / 2;
+        const d = Math.hypot(centerX - cursorX, centerY - cursorY);
+        if (d > best.d) best = { x: cx, y: cy, d };
+      }
+    }
+    place(best.x, best.y);
+
+    if (dodges >= maxDodges) {
+      noBtn.textContent = captions[captions.length - 1];
+    }
+  }
+
+  if (!reduced) {
+    zone.addEventListener('pointermove', (e) => {
+      const r = noBtn.getBoundingClientRect();
+      const bx = r.left + r.width / 2;
+      const by = r.top + r.height / 2;
+      const dist = Math.hypot(e.clientX - bx, e.clientY - by);
+      if (dist < threshold) fleeFrom(e.clientX, e.clientY);
+    });
+    noBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      fleeFrom(t.clientX, t.clientY);
+    }, { passive: false });
+  }
+
+  noBtn.addEventListener('click', () => {
+    if (dodges >= maxDodges) {
+      noBtn.textContent = 'Yaudah, makasih udah baca ✨';
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    // jaga biar tombol nggak nyangkut di luar arena kalau ukuran layar berubah
+    const r = noBtn.getBoundingClientRect();
+    const z = zone.getBoundingClientRect();
+    place(r.left - z.left, r.top - z.top);
+  });
+})();
+
+// ---------- yes button ----------
+(function(){
+  const yesBtn = document.getElementById('yesBtn');
+  const noBtn = document.getElementById('noBtn');
+  const stamp = document.getElementById('stamp');
+  const afterYes = document.getElementById('afterYes');
+  const confettiWrap = document.getElementById('confetti');
+  const colors = ['#b3242e','#e8b23d','#35e0c4','#f2e8d5'];
+
+  yesBtn.addEventListener('click', ()=>{
+    stamp.classList.add('show');
+    afterYes.classList.add('show');
+    yesBtn.style.display = 'none';
+    noBtn.style.display = 'none';
+    burstConfetti();
+    setTimeout(()=>{
+      document.getElementById('credits').scrollIntoView({behavior:'smooth'});
+    }, 1400);
+  });
+
+  function burstConfetti(){
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    for(let i=0;i<70;i++){
+      const c = document.createElement('span');
+      c.style.left = Math.random()*100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random()*colors.length)];
+      c.style.animationDuration = (2.5 + Math.random()*2) + 's';
+      c.style.animationDelay = (Math.random()*0.6) + 's';
+      c.style.opacity = String(0.7 + Math.random()*0.3);
+      confettiWrap.appendChild(c);
+      setTimeout(()=>c.remove(), 5000);
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
